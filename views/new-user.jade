@@ -1,4 +1,16 @@
 extends layout
 
 block content
-    h1= title
+    div.jumbotron
+            div.container
+                h1= title
+                    span.pull-right.glyphicon.glyphicon-user
+                h2
+                    div.row
+                        div.col-xs-8
+                            span Username: #{userId}
+                        div.col-xs-4
+                            form(action='/', method='POST')
+                                input(type='hidden', value='#{userId}')
+                                button.btn.btn-primary.pull-right(type='submit') Proceed To Learn Passwords 
+                                    span.glyphicon.glyphicon-chevron-right

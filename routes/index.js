@@ -61,9 +61,7 @@ router.post('/new-user', function(req, res, next) {
 
 // DISPLAYS THE NEW USER'S ID
 router.get('/new-user/:userId', function(req, res, next) {
-
-    res.send("It worky")
-
+    res.render('new-user', { title: 'Successfully created user!', userId: req.params.userId });
 });
 
 module.exports = router;
