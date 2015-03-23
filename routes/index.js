@@ -62,6 +62,7 @@ router.post('/new-user', function(req, res, next) {
 // DISPLAYS THE NEW USER'S ID
 router.get('/new-user/:userId', function(req, res, next) {
 
+    res.send("It worky")
 
 });
 
