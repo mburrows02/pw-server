@@ -110,15 +110,26 @@ module.exports = function(schemes) {
     //  callback(error)
     userDB.addPasswords = function(pws, callback) {
 
-        pws.map(function(pw, index) {
+        const values = pws.map(function(pw, index) {
+
+            const fields = ['userId', 'domain', 'password'];
             return {
-                str: ['userId', 'domain', 'password'].map(function(item) { return '$' + index + 'item'}).join(', '),
-                params: 
+                str: fields.map(function(item) { return '$' + index + item }).join(', '),
+                params: fields.map(function(item) { return { name: item, value: pw[item] }; })
             };
         });
 
-        db.run('INSERT INTO ' + PASSWORDS_TABLE + ' VALUES($uid, $dom, $pw);',
-            { $uid: data.userId, $dom: data.domain, $pw: data.password }, callback);
+        const data = values.reduce(function(prev, curr) {
+
+            return curr.params.reduce(function(prev, curr) {
+                prev[curr.name] = curr.value;
+                return prev;
+            }, prev);
+        }, {})
+
+        const stmt = 'INSERT INTO ' + PASSWORDS_TABLE + ' VALUES (' + values.map(function(item) { return item.str; }).join('), (') + ')';
+
+        db.run(stmt, data, callback);
     };
 
     // CHECKS THE PASSWORD AND REGISTERS AN ATTEMPT
