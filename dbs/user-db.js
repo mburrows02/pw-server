@@ -112,8 +112,8 @@ module.exports = function(schemes) {
 
         pws.map(function(pw, index) {
             return {
-                str: ['userId', 'domain', 'password'].map(function(item) { return '$' + index + 'item'}).join(', '),
-                params: 
+                str: ['userId', 'domain', 'password'].map(function(item) { return '$' + index + 'item'}).join(', ')
+                //params: 
             };
         });
 
