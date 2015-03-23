@@ -1,0 +1,7 @@
+.navbar.navbar-default.navbar-fixed-top+* {
+    margin-top: 50px;
+}
+
+textarea.no-resize {
+    resize: none;
+}

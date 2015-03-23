@@ -1,0 +1,24 @@
+extends layout
+
+block content
+    div.container-fluid
+        div.jumbotron
+            div.container
+                h1= title
+                    span.pull-right.glyphicon.glyphicon-lock
+    div.container
+        div.row
+            div.col-xs-offset-2.col-xs-8
+                div.panel.panel-primary
+                    div.panel-body
+                        form.form-horizontal(action='/', method='post')
+                            div.form-group
+                                div.col-xs-12
+                                    div.input-group
+                                        div.input-group-addon: span.glyphicon.glyphicon-user
+                                        input.col-xs-12.form-control(type='text', placeholder='Username', name='username')
+                            div.row
+                                div.col-xs-12.btn-toolbar
+                                    button.btn.btn-default(type='submit', formaction='/') Proceed To Login
+                                    button.btn.btn-default(type='submit', formaction='/') Learn Passwords
+                                    button.btn.btn-link(type='submit', formaction='/new-user') Create New User
