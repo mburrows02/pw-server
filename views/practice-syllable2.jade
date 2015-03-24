@@ -1,7 +1,7 @@
 extends practice-pw
 
 block password
-    span #{password}
+    span.h4= password.replace('*', ' · ')
 
 block confirm
     div.form-horizontal

@@ -154,15 +154,18 @@ module.exports = function(schemes) {
         db.run(stmt, data, callback);
     };
 
-    // CHECKS THE PASSWORD AND REGISTERS AN ATTEMPT
+    // REGISTERS AN ATTEMPT AND GETS THE PASSWORD INFO
     //
     //  data = {
     //      userId: <int>,
-    //      domain: <string>,
-    //      password: <string>
+    //      domain: <string>
     //  }
-    //  callback(error, result)
-    //  result = { didMatch: <boolean>, attemptNum: <int> }
+    //  callback(error, info)
+    //  info = {
+    //      password: <string>,
+    //      scheme: <string>,
+    //      attemptNum: <int>
+    //  }
     userDB.attemptPassword = function(data, callback) {
 
         const stmt = 'UPDATE ' + PASSWORDS_TABLE + ' SET ' + PASSWORD_NUM_ATTEMPTS_COL + ' = ' + PASSWORD_NUM_ATTEMPTS_COL + ' + 1' +
@@ -175,39 +178,8 @@ module.exports = function(schemes) {
                 return;
             }
 
-            const stmt = 'SELECT ' + PASSWORD_VALUE_COL + ', ' + PASSWORD_NUM_ATTEMPTS_COL + ' FROM ' + PASSWORDS_TABLE +
-                ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' + PASSWORD_DOMAIN_COL + ' = $dom;';
-
-            db.get(stmt, { $uid: data.userId, $dom: data.domain }, function(error, row) {
-
-                var result = undefined;
-
-                if (row) {
-                    result = { didMatch: row[PASSWORD_VALUE_COL] === data.password, attemptNum: row[PASSWORD_NUM_ATTEMPTS_COL] };
-                }
-
-                callback(error, result);
-            });
+            userDB.getPwInfo(data, callback);
         })
-    };
-
-    // CHECKS WHETHER THE PASSWORD IS CORRECT
-    //
-    //  data = {
-    //      userId: <int>,
-    //      domain: <string>,
-    //      password: <string>
-    //  }
-    //  callback(error, didMatch)
-    userDB.checkPassword = function(data, callback) {
-
-        const stmt = 'SELECT * FROM ' + PASSWORDS_TABLE + ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' +
-            PASSWORD_DOMAIN_COL + ' = $dom AND ' + PASSWORD_VALUE_COL + ' = $pw;';
-
-        db.get(stmt, { $uid: data.userId, $dom: data.domain, $pw: data.password }, function(error, row) {
-
-            callback(error, row ? true : false);
-        });
     };
 
     return userDB;

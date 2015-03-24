@@ -13,17 +13,32 @@ const schemes = {
                 arr.push(((Math.random() * (max - min) + min) | 0).toString(max));
             }
             return arr.join('');
+        },
+        check: function(raw, stored) {
+            return raw === stored;
         }
     },
     'syllable2': {
         gen: function() {
-            var password = '';
+
+            var arr = [];
             for (var i = 0; i < 2; ++i) {
-                password = password.concat(syllableParts.onset[(Math.random() * syllableParts.onset.length) | 0]);
-                password = password.concat(syllableParts.nucleus[(Math.random() * syllableParts.nucleus.length) | 0]);
-                password = password.concat(syllableParts.coda[(Math.random() * syllableParts.coda.length) | 0]);
+                var syl = syllableParts.onset[(Math.random() * syllableParts.onset.length) | 0] +
+                    syllableParts.nucleus[(Math.random() * syllableParts.nucleus.length) | 0] +
+                    syllableParts.coda[(Math.random() * syllableParts.coda.length) | 0];
+                arr.push(syl);
             }
-            return password;
+            return arr.join('*');
+            // var password = '';
+            // for (var i = 0; i < 2; ++i) {
+            //     password = password.concat(syllableParts.onset[(Math.random() * syllableParts.onset.length) | 0]);
+            //     password = password.concat(syllableParts.nucleus[(Math.random() * syllableParts.nucleus.length) | 0]);
+            //     password = password.concat(syllableParts.coda[(Math.random() * syllableParts.coda.length) | 0]);
+            // }
+            // return password;
+        },
+        check: function(raw, stored) {
+            return raw === stored.replace('*', '');
         }
     }
 };
@@ -95,14 +110,13 @@ router.post('/practice/:userId/:domain', function(req, res, next) {
 
     var data = {
         userId: req.params.userId,
-        domain: req.params.domain,
-        password: req.body.password
+        domain: req.params.domain
     };
-    userDB.checkPassword(data, function(error, didMatch) {
+    userDB.getPwInfo(data, function(error, info) {
 
         if (error) throw error;
 
-        if (didMatch) {
+        if (schemes[info.scheme].check(req.body.password, info.password)) {
             const nextDom = domains[domains.indexOf(data.domain) + 1];
             if (nextDom) {
                 res.redirect('/practice/' + data.userId + '/' + nextDom);
