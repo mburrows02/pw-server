@@ -111,6 +111,7 @@ router.post('/practice/:userId/:domain', function(req, res, next) {
         }
         else {
             res.redirect('/practice/' + data.userId + '/' + data.domain + '?pwError=Incorrect Password');
+        }
     });
 });
 
