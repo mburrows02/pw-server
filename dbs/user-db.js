@@ -115,7 +115,7 @@ module.exports = function(schemes) {
             const fields = ['userId', 'domain', 'password'];
             return {
                 str: fields.map(function(item) { return '$' + index + item }).join(', '),
-                params: fields.map(function(item) { return { name: item, value: pw[item] }; })
+                params: fields.map(function(item) { return { name: '$' + index + item, value: pw[item] }; })
             };
         });
 
@@ -127,7 +127,11 @@ module.exports = function(schemes) {
             }, prev);
         }, {})
 
-        const stmt = 'INSERT INTO ' + PASSWORDS_TABLE + ' VALUES (' + values.map(function(item) { return item.str; }).join('), (') + ')';
+        const stmt = 'INSERT INTO ' + PASSWORDS_TABLE + ' (' + PASSWORD_USER_ID_COL + ', ' + PASSWORD_DOMAIN_COL + ', ' + PASSWORD_VALUE_COL
+            + ') VALUES (' + values.map(function(item) { return item.str; }).join('), (') + ')';
+
+        console.log(stmt);
+        console.log(JSON.stringify(data));
 
         db.run(stmt, data, callback);
     };

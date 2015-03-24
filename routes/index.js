@@ -17,26 +17,51 @@ const userDB = require('../dbs/user-db')(Object.keys(schemes));
 
 const domains = [ 'Email', 'Facebook', 'Banking' ];
 
-// GETS THE HOME PAGE.
+// GETS THE HOME PAGE
 router.get('/', function(req, res, next) {
     res.render('index', { title: 'Password Experiment' });
 });
 
-router.get('/new-user', function(req, res, next) {
+// CREATES A NEW USER AND GENERATES PASSWORDS FOR THE USER
+router.post('/new-user', function(req, res, next) {
 
     userDB.newUser(function(error, user) {
 
+        var errData = {
+            title: 'Error',
+            message: 'An error occurred while making a new user'
+        };
+
         if (error) {
-            var data = {
-                message: 'An error occurred while making a new user',
-                error: new Error(error)
-            };
-            res.render('error', data);
+            errData.error = new Error(error);
+            res.render('error', errData);
             return;
         }
 
+        const pws = domains.map(function(domain) {
+            return {
+                userId: user.uid,
+                domain: domain,
+                password: schemes[user.scheme].gen()
+            };
+        });
         
+        userDB.addPasswords(pws, function(error) {
+
+            if (error) {
+                errData.error = new Error(error);
+                res.render('error', errData);
+                return;
+            }
+
+            res.redirect('/new-user/' + user.uid);
+        });
     });
+});
+
+// DISPLAYS THE NEW USER'S ID
+router.get('/new-user/:userId', function(req, res, next) {
+    res.render('new-user', { title: 'Successfully created user!', userId: req.params.userId });
 });
 
 module.exports = router;
