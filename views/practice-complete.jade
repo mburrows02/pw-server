@@ -1,0 +1,11 @@
+extends layout
+
+block content
+    div.jumbotron
+        div.container
+            h1= title
+                span.pull-right.glyphicon.glyphicon-education
+            form(action='/login', method='post')
+                input(type='hidden', value='#{userId}', name='userId')
+                button.btn.btn-primary(type='submit') Continue To Login 
+                    span.glyphicon.glyphicon-chevron-right

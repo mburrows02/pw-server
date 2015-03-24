@@ -8,9 +8,11 @@ const schemes = {
 
             const max = 36;
             const min = 10;
-            return new Array(6).map(function() {
-                return ((Math.random() * (max - min) + min) | 0).toString(max);
-            }).join();
+            var arr = [];
+            for (var i = 0; i < 6; ++i) {
+                arr.push(((Math.random() * (max - min) + min) | 0).toString(max));
+            }
+            return arr.join('');
         }
     },
     'syllable2': {
@@ -77,7 +79,7 @@ router.get('/practice/:userId/:domain', function(req, res, next) {
         if (!info) throw 'No record found for UserID=' + req.params.userId + ', Domain=' + req.params.domain;
 
         var data = {
-            title: 'Confirm your ' + req.params.domain + ' password',
+            title: 'Learn your ' + req.params.domain + ' password',
             userId: req.params.userId,
             domain: req.params.domain,
             password: info.password,
@@ -106,13 +108,24 @@ router.post('/practice/:userId/:domain', function(req, res, next) {
                 res.redirect('/practice/' + data.userId + '/' + nextDom);
             }
             else {
-                throw 'TODO'; // TODO ADD COMPLETION PART HERE
+                res.redirect('/practice/' + data.userId);
             }
         }
         else {
             res.redirect('/practice/' + data.userId + '/' + data.domain + '?pwError=Incorrect Password');
         }
     });
+});
+
+// GETS THE PRACTICE COMPLETION PAGE
+router.get('/practice/:userId', function(req, res, next) {
+    res.render('practice-complete', { title: 'Password practice complete!', userId: req.params.userId });
+});
+
+// POSTS TO START THE LOGIN PROCESS
+router.post('/login', function(req, res, next) {
+
+    throw 'TODO - Implement login';
 });
 
 module.exports = router;
