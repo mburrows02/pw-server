@@ -1,15 +1,27 @@
 const express = require('express');
 const router = express.Router();
+const syllableParts = require('syllables.json');
 
 const schemes = {
     'text6': {
         gen: function() {
 
             const max = 36;
-            const min = 9;
+            const min = 10;
             return new Array(6).map(function() {
                 return ((Math.random() * (max - min) + min) | 0).toString(max);
             }).join();
+        }
+    },
+    'syllable2': {
+        gen: function() {
+            var password = '';
+            for (i = 0; i < 2; ++i) {
+                password = password.concat(syllableParts.onset[(Math.random() * syllableParts.onset.length) | 0]);
+                password = password.concat(syllableParts.nucleus[(Math.random() * syllableParts.nucleus.length) | 0]);
+                password = password.concat(syllableParts.coda[(Math.random() * syllableParts.coda.length) | 0]);
+            }
+            return password;
         }
     }
 };
