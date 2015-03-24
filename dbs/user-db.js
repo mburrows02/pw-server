@@ -99,6 +99,27 @@ module.exports = function(schemes) {
         });
     };
 
+    // GETS THE PASSWORD FOR THE GIVEN USER
+    //
+    //  data = {
+    //      userId: <int>,
+    //      domain: <string>
+    //  }
+    //  callback(error, info)
+    //  info = {
+    //      password: <string>,
+    //      scheme: <string>,
+    //      attemptNum: <int>
+    //  }
+    userDB.getPwInfo = function(data, callback) {
+
+        const stmt = 'SELECT ' + PASSWORD_VALUE_COL + ' AS password, ' + PASSWORD_NUM_ATTEMPTS_COL + ' AS attemptNum, ' +
+            USER_PW_SCHEME_COL + ' AS scheme FROM ' + PASSWORDS_TABLE + ' NATURAL JOIN ' + USERS_TABLE +
+            ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' + PASSWORD_DOMAIN_COL + ' = $dom;';
+
+        db.get(stmt, { $uid: data.userId, $dom: data.domain }, callback);
+    };
+
     // INSERTS A NEW PASSWORD
     //
     //  pws = [ pw, ... ]
@@ -154,7 +175,7 @@ module.exports = function(schemes) {
                 return;
             }
 
-            const stmt = 'SELECT ' + PASSWORD_VALUE_COL + ', ' PASSWORD_NUM_ATTEMPTS_COL + ' FROM ' + PASSWORDS_TABLE +
+            const stmt = 'SELECT ' + PASSWORD_VALUE_COL + ', ' + PASSWORD_NUM_ATTEMPTS_COL + ' FROM ' + PASSWORDS_TABLE +
                 ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' + PASSWORD_DOMAIN_COL + ' = $dom;';
 
             db.get(stmt, { $uid: data.userId, $dom: data.domain }, function(error, row) {

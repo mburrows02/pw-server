@@ -1,0 +1,30 @@
+extends layout
+
+block content
+    div.jumbotron
+        div.container
+            h1= title
+                span.pull-right.glyphicon.glyphicon-tree-deciduous
+    div.container
+        div.col-xs-12
+            div.row
+                div.panel.panel-default
+                    div.panel-heading
+                        h2.panel-title Password
+                    div.panel-body
+                        block password
+            div.row
+                div.panel(class=pwError ? 'panel-danger' : 'panel-primary')
+                    div.panel-heading
+                        h2.panel-title Confirm Password
+                    div.panel-body
+                        form(action='/practice/#{userId}/#{domain}', method='post')
+                            block confirm
+                            div.row
+                                div.col-xs-8
+                                    if pwError
+                                        p.form-control-static: strong.text-danger= pwError
+                                div.col-xs-4
+                                    div.pull-right.btn-toolbar
+                                        button.btn.btn-default(type='button') Check
+                                        button.btn.btn-primary(type='submit') Confirm

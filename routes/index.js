@@ -16,7 +16,7 @@ const schemes = {
     'syllable2': {
         gen: function() {
             var password = '';
-            for (i = 0; i < 2; ++i) {
+            for (var i = 0; i < 2; ++i) {
                 password = password.concat(syllableParts.onset[(Math.random() * syllableParts.onset.length) | 0]);
                 password = password.concat(syllableParts.nucleus[(Math.random() * syllableParts.nucleus.length) | 0]);
                 password = password.concat(syllableParts.coda[(Math.random() * syllableParts.coda.length) | 0]);
@@ -39,16 +39,7 @@ router.post('/new-user', function(req, res, next) {
 
     userDB.newUser(function(error, user) {
 
-        var errData = {
-            title: 'Error',
-            message: 'An error occurred while making a new user'
-        };
-
-        if (error) {
-            errData.error = new Error(error);
-            res.render('error', errData);
-            return;
-        }
+        if (error) throw error;
 
         const pws = domains.map(function(domain) {
             return {
@@ -60,11 +51,7 @@ router.post('/new-user', function(req, res, next) {
         
         userDB.addPasswords(pws, function(error) {
 
-            if (error) {
-                errData.error = new Error(error);
-                res.render('error', errData);
-                return;
-            }
+            if (error) throw error;
 
             res.redirect('/new-user/' + user.uid);
         });
@@ -74,6 +61,57 @@ router.post('/new-user', function(req, res, next) {
 // DISPLAYS THE NEW USER'S ID
 router.get('/new-user/:userId', function(req, res, next) {
     res.render('new-user', { title: 'Successfully created user!', userId: req.params.userId });
+});
+
+// POSTS THE USER ID TO START PRACTICING WITH
+router.post('/practice', function(req, res, next) {
+    res.redirect('/practice/' + req.body.userId + '/' + domains[0]);
+});
+
+// GETS THE APPROPRIATE ITEM TO PRACTICE
+router.get('/practice/:userId/:domain', function(req, res, next) {
+
+    userDB.getPwInfo({ userId: req.params.userId, domain: req.params.domain }, function(error, info) {
+
+        if (error) throw error;
+        if (!info) throw 'No record found for UserID=' + req.params.userId + ', Domain=' + req.params.domain;
+
+        var data = {
+            title: 'Confirm your ' + req.params.domain + ' password',
+            userId: req.params.userId,
+            domain: req.params.domain,
+            password: info.password,
+            pwError: req.query.pwError
+        };
+
+        res.render('practice-' + info.scheme, data);
+    });
+});
+
+// POSTS TO THE CURRENT DOMAIN TO CONFIRM THE PASSWORD
+router.post('/practice/:userId/:domain', function(req, res, next) {
+
+    var data = {
+        userId: req.params.userId,
+        domain: req.params.domain,
+        password: req.body.password
+    };
+    userDB.checkPassword(data, function(error, didMatch) {
+
+        if (error) throw error;
+
+        if (didMatch) {
+            const nextDom = domains[domains.indexOf(data.domain) + 1];
+            if (nextDom) {
+                res.redirect('/practice/' + data.userId + '/' + nextDom);
+            }
+            else {
+                throw 'TODO'; // TODO ADD COMPLETION PART HERE
+            }
+        }
+        else {
+            res.redirect('/practice/' + data.userId + '/' + data.domain + '?pwError=Incorrect Password');
+    });
 });
 
 module.exports = router;
