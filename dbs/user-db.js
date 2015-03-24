@@ -130,9 +130,6 @@ module.exports = function(schemes) {
         const stmt = 'INSERT INTO ' + PASSWORDS_TABLE + ' (' + PASSWORD_USER_ID_COL + ', ' + PASSWORD_DOMAIN_COL + ', ' + PASSWORD_VALUE_COL
             + ') VALUES (' + values.map(function(item) { return item.str; }).join('), (') + ')';
 
-        console.log(stmt);
-        console.log(JSON.stringify(data));
-
         db.run(stmt, data, callback);
     };
 
@@ -150,22 +147,22 @@ module.exports = function(schemes) {
         const stmt = 'UPDATE ' + PASSWORDS_TABLE + ' SET ' + PASSWORD_NUM_ATTEMPTS_COL + ' = ' + PASSWORD_NUM_ATTEMPTS_COL + ' + 1' +
             ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' + PASSWORD_DOMAIN_COL + ' = $dom;';
 
-        db.run(stmt, { $uid: data.userId, $dom: data.domain, $pw: data.password }, function(error) {
+        db.run(stmt, { $uid: data.userId, $dom: data.domain }, function(error) {
 
             if (error) {
                 callback(error);
                 return;
             }
 
-            const stmt = 'SELECT ' + PASSWORD_NUM_ATTEMPTS_COL + ' FROM ' + PASSWORDS_TABLE + ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' +
-                PASSWORD_DOMAIN_COL + ' = $dom AND ' + PASSWORD_VALUE_COL + ' = $pw;';
+            const stmt = 'SELECT ' + PASSWORD_VALUE_COL + ', ' PASSWORD_NUM_ATTEMPTS_COL + ' FROM ' + PASSWORDS_TABLE +
+                ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' + PASSWORD_DOMAIN_COL + ' = $dom;';
 
-            db.get(stmt, { $uid: data.userId, $dom: data.domain, $pw: data.password }, function(error, row) {
+            db.get(stmt, { $uid: data.userId, $dom: data.domain }, function(error, row) {
 
                 var result = undefined;
 
                 if (row) {
-                    result = { didMatch: true, attemptNum: row[PASSWORD_NUM_ATTEMPTS_COL] };
+                    result = { didMatch: row[PASSWORD_VALUE_COL] === data.password, attemptNum: row[PASSWORD_NUM_ATTEMPTS_COL] };
                 }
 
                 callback(error, result);
