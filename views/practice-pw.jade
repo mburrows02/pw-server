@@ -16,7 +16,7 @@ block content
             div.row
                 div.panel(class=pwError ? 'panel-danger' : 'panel-primary')
                     div.panel-heading
-                        h2.panel-title Confirm Password
+                        h2.panel-title Confirm #{domain} Password
                     div.panel-body
                         form(action='/practice/#{userId}/#{domain}', method='post')
                             block confirm
