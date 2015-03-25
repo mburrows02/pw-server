@@ -29,13 +29,6 @@ const schemes = {
                 arr.push(syl);
             }
             return arr.join('*');
-            // var password = '';
-            // for (var i = 0; i < 2; ++i) {
-            //     password = password.concat(syllableParts.onset[(Math.random() * syllableParts.onset.length) | 0]);
-            //     password = password.concat(syllableParts.nucleus[(Math.random() * syllableParts.nucleus.length) | 0]);
-            //     password = password.concat(syllableParts.coda[(Math.random() * syllableParts.coda.length) | 0]);
-            // }
-            // return password;
         },
         check: function(raw, stored) {
             return raw === stored.replace('*', '');
@@ -45,6 +38,9 @@ const schemes = {
 const userDB = require('../dbs/user-db')(Object.keys(schemes));
 
 const domains = [ 'Email', 'Facebook', 'Banking' ];
+function nextDomain(curr) { return domains[domains.indexOf(curr) + 1]; }
+
+const MAX_ATTEMPTS = 3;
 
 // GETS THE HOME PAGE
 router.get('/', function(req, res, next) {
@@ -85,21 +81,22 @@ router.post('/practice', function(req, res, next) {
     res.redirect('/practice/' + req.body.userId + '/' + domains[0]);
 });
 
-// GETS THE APPROPRIATE ITEM TO PRACTICE
+// GETS THE APPROPRIATE DOMAIN TO PRACTICE
 router.get('/practice/:userId/:domain', function(req, res, next) {
 
-    userDB.getPwInfo({ userId: req.params.userId, domain: req.params.domain }, function(error, info) {
+    var data = {
+        userId: req.params.userId,
+        domain: req.params.domain
+    };
+
+    userDB.getPwInfo(data, function(error, info) {
 
         if (error) throw error;
         if (!info) throw 'No record found for UserID=' + req.params.userId + ', Domain=' + req.params.domain;
 
-        var data = {
-            title: 'Learn your ' + req.params.domain + ' password',
-            userId: req.params.userId,
-            domain: req.params.domain,
-            password: info.password,
-            pwError: req.query.pwError
-        };
+        data.title = 'Learn your ' + req.params.domain + ' password',
+        data.password = info.password,
+        data.pwError = req.query.pwError
 
         res.render('practice-' + info.scheme, data);
     });
@@ -112,12 +109,13 @@ router.post('/practice/:userId/:domain', function(req, res, next) {
         userId: req.params.userId,
         domain: req.params.domain
     };
+
     userDB.getPwInfo(data, function(error, info) {
 
         if (error) throw error;
 
         if (schemes[info.scheme].check(req.body.password, info.password)) {
-            const nextDom = domains[domains.indexOf(data.domain) + 1];
+            const nextDom = nextDomain(data.domain);
             if (nextDom) {
                 res.redirect('/practice/' + data.userId + '/' + nextDom);
             }
@@ -138,8 +136,62 @@ router.get('/practice/:userId', function(req, res, next) {
 
 // POSTS TO START THE LOGIN PROCESS
 router.post('/login', function(req, res, next) {
+    res.redirect('/login/' + req.body.userId + '/' + domains[0]);
+});
 
-    throw 'TODO - Implement login';
+// GETS THE APPROPRIATE DOMAIN TO LOGIN TO
+router.get('/login/:userId/:domain', function(req, res, next) {
+
+    var data = {
+        userId: req.params.userId,
+        domain: req.params.domain
+    };
+
+    userDB.getPwInfo(data, function(error, info) {
+
+        data.title = 'Enter your ' + data.domain + ' password';
+        data.pwError = req.query.pwError
+        data.attemptsLeft = Math.max(0, MAX_ATTEMPTS - info.attemptNum);
+
+        if (data.attemptsLeft <= 0) {
+            data.nextDomain = nextDomain(data.domain);
+            data.title = 'Login to ' + data.domain + ' unsuccessful';
+        }
+
+        res.render('login-' + info.scheme, data);
+    });
+});
+
+// POSTS TO THE CURRENT DOMAIN TO ATTEMPT THE LOGIN
+router.post('/login/:userId/:domain', function(req, res, next) {
+
+    var data = {
+        userId: req.params.userId,
+        domain: req.params.domain
+    };
+
+    userDB.attemptPassword(data, function(error, info) {
+
+        if (error) throw error;
+
+        if (schemes[info.scheme].check(req.body.password, info.password)) {
+            const nextDom = nextDomain(data.domain);
+            if (nextDom) {
+                res.redirect('/login/' + data.userId + '/' + nextDom);
+            }
+            else {
+                res.redirect('/login/' + data.userId);
+            }
+        }
+        else {
+            res.redirect('/login/' + data.userId + '/' + data.domain + '?pwError=Incorrect Password');
+        }
+    });
+});
+
+// GETS THE LOGIN COMPLETION PAGE
+router.get('/login/:userId', function(req, res, next) {
+    res.render('login-complete', { title: 'Login Process Complete' });
 });
 
 module.exports = router;

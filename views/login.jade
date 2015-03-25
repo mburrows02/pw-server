@@ -1,0 +1,28 @@
+extends layout
+
+block content
+    div.jumbotron
+        div.container
+            h1= title
+                span.pull-right.glyphicon.glyphicon-lock
+            if attemptsLeft <= 0
+                h2 No more attempts remaining.
+                    a.pull-right.btn.btn-primary(href='/login/#{userId}' + (nextDomain ? '/#{nextDomain}' : '')) Continue 
+                        span.glyphicon.glyphicon-chevron-right
+
+            else
+                h2 Attempts Remaining: #{attemptsLeft}
+    if attemptsLeft > 0
+        div.container
+            div.panel(class=pwError ? 'panel-danger' : 'panel-primary')
+                div.panel-heading
+                    h2.panel-title #{domain} Password
+                div.panel-body
+                    form(action='/login/#{userId}/#{domain}', method='post')
+                        block confirm
+                        div.row
+                            div.col-xs-8
+                                if pwError
+                                    p.form-control-static: strong.text-danger= pwError
+                            div.col-xs-4
+                                button.pull-right.btn.btn-primary(type='submit') Login
