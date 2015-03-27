@@ -1,0 +1,10 @@
+extends practice
+
+block password
+    span.h4= password.replace('*', ' · ')
+
+block confirm
+    div.form-horizontal
+        div.form-group
+            div.col-xs-12
+                input#password-input.form-control(type='password', name='password', placeholder='Password')

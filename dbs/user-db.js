@@ -99,6 +99,27 @@ module.exports = function(schemes) {
         });
     };
 
+    // GETS THE PASSWORD FOR THE GIVEN USER
+    //
+    //  data = {
+    //      userId: <int>,
+    //      domain: <string>
+    //  }
+    //  callback(error, info)
+    //  info = {
+    //      password: <string>,
+    //      scheme: <string>,
+    //      attemptNum: <int>
+    //  }
+    userDB.getPwInfo = function(data, callback) {
+
+        const stmt = 'SELECT ' + PASSWORD_VALUE_COL + ' AS password, ' + PASSWORD_NUM_ATTEMPTS_COL + ' AS attemptNum, ' +
+            USER_PW_SCHEME_COL + ' AS scheme FROM ' + PASSWORDS_TABLE + ' NATURAL JOIN ' + USERS_TABLE +
+            ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' + PASSWORD_DOMAIN_COL + ' = $dom;';
+
+        db.get(stmt, { $uid: data.userId, $dom: data.domain }, callback);
+    };
+
     // INSERTS A NEW PASSWORD
     //
     //  pws = [ pw, ... ]
@@ -130,66 +151,35 @@ module.exports = function(schemes) {
         const stmt = 'INSERT INTO ' + PASSWORDS_TABLE + ' (' + PASSWORD_USER_ID_COL + ', ' + PASSWORD_DOMAIN_COL + ', ' + PASSWORD_VALUE_COL
             + ') VALUES (' + values.map(function(item) { return item.str; }).join('), (') + ')';
 
-        console.log(stmt);
-        console.log(JSON.stringify(data));
-
         db.run(stmt, data, callback);
     };
 
-    // CHECKS THE PASSWORD AND REGISTERS AN ATTEMPT
+    // REGISTERS AN ATTEMPT AND GETS THE PASSWORD INFO
     //
     //  data = {
     //      userId: <int>,
-    //      domain: <string>,
-    //      password: <string>
+    //      domain: <string>
     //  }
-    //  callback(error, result)
-    //  result = { didMatch: <boolean>, attemptNum: <int> }
+    //  callback(error, info)
+    //  info = {
+    //      password: <string>,
+    //      scheme: <string>,
+    //      attemptNum: <int>
+    //  }
     userDB.attemptPassword = function(data, callback) {
 
         const stmt = 'UPDATE ' + PASSWORDS_TABLE + ' SET ' + PASSWORD_NUM_ATTEMPTS_COL + ' = ' + PASSWORD_NUM_ATTEMPTS_COL + ' + 1' +
             ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' + PASSWORD_DOMAIN_COL + ' = $dom;';
 
-        db.run(stmt, { $uid: data.userId, $dom: data.domain, $pw: data.password }, function(error) {
+        db.run(stmt, { $uid: data.userId, $dom: data.domain }, function(error) {
 
             if (error) {
                 callback(error);
                 return;
             }
 
-            const stmt = 'SELECT ' + PASSWORD_NUM_ATTEMPTS_COL + ' FROM ' + PASSWORDS_TABLE + ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' +
-                PASSWORD_DOMAIN_COL + ' = $dom AND ' + PASSWORD_VALUE_COL + ' = $pw;';
-
-            db.get(stmt, { $uid: data.userId, $dom: data.domain, $pw: data.password }, function(error, row) {
-
-                var result = undefined;
-
-                if (row) {
-                    result = { didMatch: true, attemptNum: row[PASSWORD_NUM_ATTEMPTS_COL] };
-                }
-
-                callback(error, result);
-            });
+            userDB.getPwInfo(data, callback);
         })
-    };
-
-    // CHECKS WHETHER THE PASSWORD IS CORRECT
-    //
-    //  data = {
-    //      userId: <int>,
-    //      domain: <string>,
-    //      password: <string>
-    //  }
-    //  callback(error, didMatch)
-    userDB.checkPassword = function(data, callback) {
-
-        const stmt = 'SELECT * FROM ' + PASSWORDS_TABLE + ' WHERE ' + PASSWORD_USER_ID_COL + ' = $uid AND ' +
-            PASSWORD_DOMAIN_COL + ' = $dom AND ' + PASSWORD_VALUE_COL + ' = $pw;';
-
-        db.get(stmt, { $uid: data.userId, $dom: data.domain, $pw: data.password }, function(error, row) {
-
-            callback(error, row ? true : false);
-        });
     };
 
     return userDB;
