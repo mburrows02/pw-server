@@ -5,3 +5,16 @@
 textarea.no-resize {
     resize: none;
 }
+
+.panel-heading .collapse-toggle .panel-title:after {
+    /* symbol for "opening" panels */
+    font-family: 'Glyphicons Halflings';
+    content: "\e114";
+    float: right;
+    overflow: no-display;
+}
+
+.panel-heading .collapse-toggle.collapsed .panel-title:after {
+    /* symbol for "collapsed" panels */
+    content: "\e080";
+}

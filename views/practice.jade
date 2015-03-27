@@ -10,9 +10,12 @@ block content
             div.row
                 div.panel.panel-default
                     div.panel-heading
-                        h2.panel-title Password
-                    div.panel-body
-                        block password
+                        div.panel-title
+                            a.collapse-toggle(data-toggle='collapse', href='#pw-panel-body')
+                                h2.panel-title Password
+                    div#pw-panel-body.collapse.in
+                        div.panel-body
+                            block password
             div.row
                 div.panel(class=pwError ? 'panel-danger' : 'panel-primary')
                     div.panel-heading
